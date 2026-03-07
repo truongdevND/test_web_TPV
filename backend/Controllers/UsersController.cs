@@ -40,5 +40,43 @@ namespace Backend.Controllers
                 return StatusCode(500, ApiResponse<string>.ServerError(ex.Message));
             }
         }
+[HttpGet("{id}")]
+public IActionResult GetById(int id)
+{
+    try
+    {
+        if (id <= 0)
+            return StatusCode(400, new ApiResponse<string>
+            {
+                StatusCode = 400,
+                Success    = false,
+                Message    = "ID must be greater than 0",
+                Data       = null
+            });
+
+        var user = _service.GetById(id);
+
+        if (user == null)
+            return StatusCode(404, new ApiResponse<string>
+            {
+                StatusCode = 404,
+                Success    = false,
+                Message    = $"User with ID = {id} not found",
+                Data       = null
+            });
+
+        return StatusCode(200, new ApiResponse<User>
+        {
+            StatusCode = 200,
+            Success    = true,
+            Message    = "Get user successfully",
+            Data       = user
+        });
+    }
+    catch (Exception ex)
+    {
+        return StatusCode(500, ApiResponse<string>.ServerError(ex.Message));
+    }
+}
     }
 }
