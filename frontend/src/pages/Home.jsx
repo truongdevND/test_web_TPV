@@ -1,13 +1,25 @@
-import { Link } from "react-router-dom";
+    import { useEffect } from "react";
 
-function Home() {
-  return (
-    <div>
-      <h1>Home Page</h1>
+    function Home() {
+        const [users, setUsers] = useState([]);
 
-      <Link to="/test">Go to Test Page</Link>
-    </div>
-  );
-}
+        useEffect(() => {
+        const fetchUsers = async () => {
+            try {
+            const response = await userService.getAll();
+            setUsers(response.data);
+            } catch (error) {
+            console.log(error);
+            }
+        };
 
-export default Home;
+        fetchUsers();
+        }, []);
+    return (
+        <div>
+        
+        </div>
+    );
+    }
+
+    export default Home;
