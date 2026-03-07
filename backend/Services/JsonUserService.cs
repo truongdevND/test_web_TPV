@@ -24,6 +24,12 @@ namespace Backend.Services
             return JsonSerializer.Deserialize<List<User>>(json, _jsonOptions) ?? new List<User>();
         }
 
+        private void WriteAll(List<User> users)
+        {
+            var json = JsonSerializer.Serialize(users, new JsonSerializerOptions { WriteIndented = true });
+            File.WriteAllText(_filePath, json);
+        }
+
         public List<User> GetAll() => ReadAll();
 
         public User? GetById(int id) => ReadAll().FirstOrDefault(u => u.Id == id);
@@ -72,6 +78,33 @@ namespace Backend.Services
                 TotalPages   = totalPages,
                 Data         = data
             };
+        }
+
+   public bool Update(int id, UpdateUserDto dto)
+{
+    var users = ReadAll();
+    var index = users.FindIndex(u => u.Id == id);
+    if (index == -1) return false;
+
+    users[index].FullName    = dto.FullName;
+    users[index].DateOfBirth = dto.DateOfBirth;
+    users[index].Email       = dto.Email;
+    users[index].Phone       = dto.Phone;
+    users[index].Address     = dto.Address;
+
+    WriteAll(users);
+    return true;
+}
+
+        public bool Delete(int id)
+        {
+            var users = ReadAll();
+            var user  = users.FirstOrDefault(u => u.Id == id);
+            if (user == null) return false;
+
+            users.Remove(user);
+            WriteAll(users);
+            return true;
         }
     }
 }

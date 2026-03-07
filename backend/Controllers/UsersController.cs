@@ -15,7 +15,6 @@ namespace Backend.Controllers
             _service = service;
         }
 
-        // GET /api/users?page=1&pageSize=10&search=an&address=hanoi&sortBy=fullname&sortDesc=false
         [HttpGet]
         public IActionResult GetAll([FromQuery] QueryParams query)
         {
@@ -71,6 +70,85 @@ public IActionResult GetById(int id)
             Success    = true,
             Message    = "Get user successfully",
             Data       = user
+        });
+    }
+    catch (Exception ex)
+    {
+        return StatusCode(500, ApiResponse<string>.ServerError(ex.Message));
+    }
+}
+// PUT /api/users/{id}
+[HttpPut("{id}")]
+public IActionResult Update(int id, [FromBody] UpdateUserDto dto)
+{
+    try
+    {
+        if (id <= 0)
+            return StatusCode(400, new ApiResponse<string>
+            {
+                StatusCode = 400,
+                Success    = false,
+                Message    = "ID must be greater than 0",
+                Data       = null
+            });
+
+        var existing = _service.GetById(id);
+        if (existing == null)
+            return StatusCode(404, new ApiResponse<string>
+            {
+                StatusCode = 404,
+                Success    = false,
+                Message    = $"User with ID = {id} not found",
+                Data       = null
+            });
+
+        _service.Update(id, dto);
+
+        return StatusCode(200, new ApiResponse<User>
+        {
+            StatusCode = 200,
+            Success    = true,
+            Message    = "User updated successfully",
+            Data       = _service.GetById(id)
+        });
+    }
+    catch (Exception ex)
+    {
+        return StatusCode(500, ApiResponse<string>.ServerError(ex.Message));
+    }
+}
+[HttpDelete("{id}")]
+public IActionResult Delete(int id)
+{
+    try
+    {
+        if (id <= 0)
+            return StatusCode(400, new ApiResponse<string>
+            {
+                StatusCode = 400,
+                Success    = false,
+                Message    = "ID must be greater than 0",
+                Data       = null
+            });
+
+        var existing = _service.GetById(id);
+        if (existing == null)
+            return StatusCode(404, new ApiResponse<string>
+            {
+                StatusCode = 404,
+                Success    = false,
+                Message    = $"User with ID = {id} not found",
+                Data       = null
+            });
+
+        _service.Delete(id);
+
+        return StatusCode(200, new ApiResponse<string>
+        {
+            StatusCode = 200,
+            Success    = true,
+            Message    = $"User ID = {id} deleted successfully",
+            Data       = null
         });
     }
     catch (Exception ex)

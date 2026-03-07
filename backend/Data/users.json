@@ -1,20 +1,11 @@
 [
   {
-    "id": 1,
-    "code": "U001",
-    "fullName": "Nguyen Van An",
-    "dateOfBirth": "15/03/2000",
-    "email": "vanan@gmail.com",
-    "phone": "0901234567",
-    "address": "Ha Noi"
-  },
-  {
-    "id": 2,
-    "code": "U002",
-    "fullName": "Tran Thi Binh",
-    "dateOfBirth": "20/07/1999",
-    "email": "thibinh@gmail.com",
-    "phone": "0912345678",
-    "address": "Ho Chi Minh City"
+    "Id": 2,
+    "Code": "U002",
+    "FullName": "Tran Thi Binh",
+    "DateOfBirth": "20/07/1999",
+    "Email": "thibinh@gmail.com",
+    "Phone": "0912345678",
+    "Address": "Ho Chi Minh City"
   }
 ]
