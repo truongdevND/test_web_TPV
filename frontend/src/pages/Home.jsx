@@ -1,25 +1,11 @@
-    import { useEffect } from "react";
+import UserManagement from "../components/UserManagement";
 
-    function Home() {
-        const [users, setUsers] = useState([]);
+function Home() {
+  return (
+    <div className="min-h-screen bg-slate-50">
+      <UserManagement />
+    </div>
+  );
+}
 
-        useEffect(() => {
-        const fetchUsers = async () => {
-            try {
-            const response = await userService.getAll();
-            setUsers(response.data);
-            } catch (error) {
-            console.log(error);
-            }
-        };
-
-        fetchUsers();
-        }, []);
-    return (
-        <div>
-        
-        </div>
-    );
-    }
-
-    export default Home;
+export default Home;

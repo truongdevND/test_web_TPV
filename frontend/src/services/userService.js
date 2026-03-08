@@ -2,7 +2,7 @@ import axiosClient from "./axiosClient";
 
 const userService = {
 
-  getAll: () => axiosClient.get("/users"),
+  getAll: (params) => axiosClient.get("/users", { params }),
 
   getById: (id) => axiosClient.get(`/users/${id}`),
 
