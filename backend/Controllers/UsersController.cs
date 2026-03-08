@@ -25,7 +25,7 @@ namespace Backend.Controllers
                 if (query.PageSize < 1 || query.PageSize > 100) query.PageSize = 10;
 
                 var result = _service.GetPaged(query);
-                return StatusCode(200, ApiResponse<PagedResult<User>>.Ok(result, "Get users successfully"));
+                return StatusCode(200, ApiResponse<PagedResult<User>>.Ok(result, "Lấy danh sách người dùng thành công"));
             }
             catch (Exception ex)
             {
@@ -40,20 +40,20 @@ namespace Backend.Controllers
             try
             {
                 if (!ModelState.IsValid)
-                    return StatusCode(400, ApiResponse<string>.BadRequest("Validation failed"));
+                    return StatusCode(400, ApiResponse<string>.BadRequest("Dữ liệu không hợp lệ"));
 
                 var existingEmail = _service.GetAll()
                                             .FirstOrDefault(u => u.Email.ToLower() == dto.Email.ToLower());
                 if (existingEmail != null)
-                    return StatusCode(409, ApiResponse<string>.Conflict($"Email {dto.Email} already exists"));
+                    return StatusCode(409, ApiResponse<string>.Conflict($"Email {dto.Email} đã tồn tại"));
 
                 var existingCode = _service.GetAll()
                                            .FirstOrDefault(u => u.Code.ToLower() == dto.Code.ToLower());
                 if (existingCode != null)
-                    return StatusCode(409, ApiResponse<string>.Conflict($"Code {dto.Code} already exists"));
+                    return StatusCode(409, ApiResponse<string>.Conflict($"Mã {dto.Code} đã tồn tại"));
 
                 var created = _service.Create(dto);
-                return StatusCode(201, ApiResponse<User>.Created(created, "User created successfully"));
+                return StatusCode(201, ApiResponse<User>.Created(created, "Tạo người dùng thành công"));
             }
             catch (Exception ex)
             {
@@ -68,13 +68,13 @@ namespace Backend.Controllers
             try
             {
                 if (id <= 0)
-                    return StatusCode(400, ApiResponse<string>.BadRequest("ID must be greater than 0"));
+                    return StatusCode(400, ApiResponse<string>.BadRequest("ID phải lớn hơn 0"));
 
                 var user = _service.GetById(id);
                 if (user == null)
-                    return StatusCode(404, ApiResponse<string>.NotFound($"User with ID = {id} not found"));
+                    return StatusCode(404, ApiResponse<string>.NotFound($"Không tìm thấy người dùng với ID = {id}"));
 
-                return StatusCode(200, ApiResponse<User>.Ok(user, "Get user successfully"));
+                return StatusCode(200, ApiResponse<User>.Ok(user, "Lấy thông tin người dùng thành công"));
             }
             catch (Exception ex)
             {
@@ -89,14 +89,14 @@ namespace Backend.Controllers
             try
             {
                 if (id <= 0)
-                    return StatusCode(400, ApiResponse<string>.BadRequest("ID must be greater than 0"));
+                    return StatusCode(400, ApiResponse<string>.BadRequest("ID phải lớn hơn 0"));
 
                 var existing = _service.GetById(id);
                 if (existing == null)
-                    return StatusCode(404, ApiResponse<string>.NotFound($"User with ID = {id} not found"));
+                    return StatusCode(404, ApiResponse<string>.NotFound($"Không tìm thấy người dùng với ID = {id}"));
 
                 _service.Update(id, dto);
-                return StatusCode(200, ApiResponse<User>.Ok(_service.GetById(id)!, "User updated successfully"));
+                return StatusCode(200, ApiResponse<User>.Ok(_service.GetById(id)!, "Cập nhật người dùng thành công"));
             }
             catch (Exception ex)
             {
@@ -111,14 +111,14 @@ namespace Backend.Controllers
             try
             {
                 if (id <= 0)
-                    return StatusCode(400, ApiResponse<string>.BadRequest("ID must be greater than 0"));
+                    return StatusCode(400, ApiResponse<string>.BadRequest("ID phải lớn hơn 0"));
 
                 var existing = _service.GetById(id);
                 if (existing == null)
-                    return StatusCode(404, ApiResponse<string>.NotFound($"User with ID = {id} not found"));
+                    return StatusCode(404, ApiResponse<string>.NotFound($"Không tìm thấy người dùng với ID = {id}"));
 
                 _service.Delete(id);
-                return StatusCode(200, ApiResponse<string>.Ok($"User ID = {id} deleted successfully"));
+                return StatusCode(200, ApiResponse<string>.Ok($"Xóa người dùng ID = {id} thành công"));
             }
             catch (Exception ex)
             {
