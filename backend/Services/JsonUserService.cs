@@ -79,7 +79,27 @@ namespace Backend.Services
                 Data         = data
             };
         }
+public User Create(CreateUserDto dto)
+{
+    var users = ReadAll();
 
+    var newId = users.Count > 0 ? users.Max(u => u.Id) + 1 : 1;
+
+    var user = new User
+    {
+        Id          = newId,
+        Code        = dto.Code,         
+        FullName    = dto.FullName,
+        DateOfBirth = dto.DateOfBirth,
+        Email       = dto.Email,
+        Phone       = dto.Phone,
+        Address     = dto.Address
+    };
+
+    users.Add(user);
+    WriteAll(users);
+    return user;
+}
    public bool Update(int id, UpdateUserDto dto)
 {
     var users = ReadAll();

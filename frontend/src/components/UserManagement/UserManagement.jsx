@@ -1,7 +1,15 @@
 import { useEffect, useState } from "react";
 import userService from "../../services/userService";
+import { Button } from "../ui";
 import UserTable from "./UserTable";
 import Pagination from "./Pagination";
+import UserFormModal from "./UserFormModal";
+
+const PlusIcon = () => (
+  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+  </svg>
+);
 
 const DEFAULT_PAGE_SIZE = 10;
 
@@ -15,6 +23,10 @@ function UserManagement() {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState("create");
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [submitLoading, setSubmitLoading] = useState(false);
 
   const fetchUsers = async (page = 1) => {
     setLoading(true);
@@ -48,15 +60,56 @@ function UserManagement() {
     fetchUsers(newPage);
   };
 
+  const openCreateModal = () => {
+    setSelectedUser(null);
+    setModalMode("create");
+    setModalOpen(true);
+  };
+
+  const openEditModal = (user) => {
+    setSelectedUser(user);
+    setModalMode("edit");
+    setModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setModalOpen(false);
+    setSelectedUser(null);
+  };
+
+  const handleSubmitUser = async (formData) => {
+    setSubmitLoading(true);
+    try {
+      if (modalMode === "create") {
+        await userService.create(formData);
+      } else {
+        await userService.update(selectedUser.id, formData);
+      }
+      closeModal();
+      await fetchUsers(pagination.page);
+    } catch (err) {
+      console.error(err);
+      const msg = err.response?.data?.message || "Có lỗi xảy ra. Vui lòng thử lại.";
+      alert(msg);
+    } finally {
+      setSubmitLoading(false);
+    }
+  };
+
   return (
     <div className="max-w-6xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-      <header className="mb-8">
-        <h1 className="text-2xl font-bold text-slate-800 tracking-tight">
-          Quản lý người dùng
-        </h1>
-        <p className="mt-1 text-sm text-slate-500">
-          Xem và quản lý danh sách người dùng trong hệ thống
-        </p>
+      <header className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-800 tracking-tight">
+            Quản lý người dùng
+          </h1>
+          <p className="mt-1 text-sm text-slate-500">
+            Xem và quản lý danh sách người dùng trong hệ thống
+          </p>
+        </div>
+        <Button variant="primary" icon={<PlusIcon />} onClick={openCreateModal} className="shrink-0">
+          Tạo mới
+        </Button>
       </header>
 
       <div className="bg-white rounded-xl shadow-sm border border-slate-200/60 overflow-hidden">
@@ -76,7 +129,7 @@ function UserManagement() {
           </div>
         ) : (
           <>
-            <UserTable users={users} />
+            <UserTable users={users} onEdit={openEditModal} />
             <Pagination
               page={pagination.page}
               totalPages={pagination.totalPages}
@@ -87,6 +140,15 @@ function UserManagement() {
           </>
         )}
       </div>
+
+      <UserFormModal
+        open={modalOpen}
+        onClose={closeModal}
+        mode={modalMode}
+        initialData={selectedUser}
+        onSubmit={handleSubmitUser}
+        loading={submitLoading}
+      />
     </div>
   );
 }

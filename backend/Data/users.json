@@ -7,5 +7,23 @@
     "Email": "thibinh@gmail.com",
     "Phone": "0912345678",
     "Address": "Ho Chi Minh City"
+  },
+  {
+    "Id": 3,
+    "Code": "U003",
+    "FullName": "Tr\u1EA7n V\u0103n Tr\u01B0\u1EDDng",
+    "DateOfBirth": "27/08/2001",
+    "Email": "truong2708.dev@gmail.com",
+    "Phone": "0898728586",
+    "Address": "vietnam"
+  },
+  {
+    "Id": 4,
+    "Code": "U005",
+    "FullName": "Tr\u1EA7n V\u0103n Tr\u01B0\u1EDDng",
+    "DateOfBirth": "01/03/2026",
+    "Email": "truong27082001.dev@gmail.com",
+    "Phone": "089872858653",
+    "Address": "vietnam"
   }
 ]

@@ -1,3 +1,16 @@
+import Button from "../ui/Button";
+
+const PrevIcon = () => (
+  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+  </svg>
+);
+const NextIcon = () => (
+  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+  </svg>
+);
+
 function Pagination({ page, totalPages, totalRecords, pageSize, onPageChange }) {
   if (totalPages <= 1) return null;
 
@@ -14,31 +27,30 @@ function Pagination({ page, totalPages, totalRecords, pageSize, onPageChange }) 
         <span className="font-medium text-slate-700">{totalRecords}</span> bản ghi
       </span>
       <div className="flex items-center gap-2">
-        <button
+        <Button
           type="button"
+          variant="secondary"
+          size="md"
+          icon={<PrevIcon />}
           disabled={page <= 1}
           onClick={() => onPageChange(page - 1)}
-          className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-lg shadow-sm hover:bg-slate-50 hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:ring-offset-1 disabled:opacity-50 disabled:pointer-events-none transition-colors"
         >
-          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
           Trước
-        </button>
+        </Button>
         <span className="min-w-[80px] text-center text-sm font-medium text-slate-600">
           Trang {page} / {totalPages}
         </span>
-        <button
+        <Button
           type="button"
+          variant="secondary"
+          size="md"
+          icon={<NextIcon />}
+          iconPosition="end"
           disabled={page >= totalPages}
           onClick={() => onPageChange(page + 1)}
-          className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-lg shadow-sm hover:bg-slate-50 hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:ring-offset-1 disabled:opacity-50 disabled:pointer-events-none transition-colors"
         >
           Sau
-          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
-        </button>
+        </Button>
       </div>
     </div>
   );
