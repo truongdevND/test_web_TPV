@@ -5,7 +5,7 @@ using Backend.Services;
 namespace Backend.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/v1/users")]
     public class UsersController : ControllerBase
     {
         private readonly JsonUserService _service;
@@ -15,146 +15,115 @@ namespace Backend.Controllers
             _service = service;
         }
 
+        // GET /api/v1/users
         [HttpGet]
         public IActionResult GetAll([FromQuery] QueryParams query)
         {
             try
             {
-                // Validate
                 if (query.Page < 1) query.Page = 1;
                 if (query.PageSize < 1 || query.PageSize > 100) query.PageSize = 10;
 
                 var result = _service.GetPaged(query);
-
-                return StatusCode(200, new ApiResponse<PagedResult<User>>
-                {
-                    StatusCode   = 200,
-                    Success      = true,
-                    Message      = "Get users successfully",
-                    Data         = result
-                });
+                return StatusCode(200, ApiResponse<PagedResult<User>>.Ok(result, "Get users successfully"));
             }
             catch (Exception ex)
             {
                 return StatusCode(500, ApiResponse<string>.ServerError(ex.Message));
             }
         }
-[HttpGet("{id}")]
-public IActionResult GetById(int id)
-{
-    try
-    {
-        if (id <= 0)
-            return StatusCode(400, new ApiResponse<string>
-            {
-                StatusCode = 400,
-                Success    = false,
-                Message    = "ID must be greater than 0",
-                Data       = null
-            });
 
-        var user = _service.GetById(id);
-
-        if (user == null)
-            return StatusCode(404, new ApiResponse<string>
-            {
-                StatusCode = 404,
-                Success    = false,
-                Message    = $"User with ID = {id} not found",
-                Data       = null
-            });
-
-        return StatusCode(200, new ApiResponse<User>
+        // POST /api/v1/users
+        [HttpPost]
+        public IActionResult Create([FromBody] CreateUserDto dto)
         {
-            StatusCode = 200,
-            Success    = true,
-            Message    = "Get user successfully",
-            Data       = user
-        });
-    }
-    catch (Exception ex)
-    {
-        return StatusCode(500, ApiResponse<string>.ServerError(ex.Message));
-    }
-}
-// PUT /api/users/{id}
-[HttpPut("{id}")]
-public IActionResult Update(int id, [FromBody] UpdateUserDto dto)
-{
-    try
-    {
-        if (id <= 0)
-            return StatusCode(400, new ApiResponse<string>
+            try
             {
-                StatusCode = 400,
-                Success    = false,
-                Message    = "ID must be greater than 0",
-                Data       = null
-            });
+                if (!ModelState.IsValid)
+                    return StatusCode(400, ApiResponse<string>.BadRequest("Validation failed"));
 
-        var existing = _service.GetById(id);
-        if (existing == null)
-            return StatusCode(404, new ApiResponse<string>
+                var existingEmail = _service.GetAll()
+                                            .FirstOrDefault(u => u.Email.ToLower() == dto.Email.ToLower());
+                if (existingEmail != null)
+                    return StatusCode(409, ApiResponse<string>.Conflict($"Email {dto.Email} already exists"));
+
+                var existingCode = _service.GetAll()
+                                           .FirstOrDefault(u => u.Code.ToLower() == dto.Code.ToLower());
+                if (existingCode != null)
+                    return StatusCode(409, ApiResponse<string>.Conflict($"Code {dto.Code} already exists"));
+
+                var created = _service.Create(dto);
+                return StatusCode(201, ApiResponse<User>.Created(created, "User created successfully"));
+            }
+            catch (Exception ex)
             {
-                StatusCode = 404,
-                Success    = false,
-                Message    = $"User with ID = {id} not found",
-                Data       = null
-            });
+                return StatusCode(500, ApiResponse<string>.ServerError(ex.Message));
+            }
+        }
 
-        _service.Update(id, dto);
-
-        return StatusCode(200, new ApiResponse<User>
+        // GET /api/v1/users/{id}
+        [HttpGet("{id}")]
+        public IActionResult GetById(int id)
         {
-            StatusCode = 200,
-            Success    = true,
-            Message    = "User updated successfully",
-            Data       = _service.GetById(id)
-        });
-    }
-    catch (Exception ex)
-    {
-        return StatusCode(500, ApiResponse<string>.ServerError(ex.Message));
-    }
-}
-[HttpDelete("{id}")]
-public IActionResult Delete(int id)
-{
-    try
-    {
-        if (id <= 0)
-            return StatusCode(400, new ApiResponse<string>
+            try
             {
-                StatusCode = 400,
-                Success    = false,
-                Message    = "ID must be greater than 0",
-                Data       = null
-            });
+                if (id <= 0)
+                    return StatusCode(400, ApiResponse<string>.BadRequest("ID must be greater than 0"));
 
-        var existing = _service.GetById(id);
-        if (existing == null)
-            return StatusCode(404, new ApiResponse<string>
+                var user = _service.GetById(id);
+                if (user == null)
+                    return StatusCode(404, ApiResponse<string>.NotFound($"User with ID = {id} not found"));
+
+                return StatusCode(200, ApiResponse<User>.Ok(user, "Get user successfully"));
+            }
+            catch (Exception ex)
             {
-                StatusCode = 404,
-                Success    = false,
-                Message    = $"User with ID = {id} not found",
-                Data       = null
-            });
+                return StatusCode(500, ApiResponse<string>.ServerError(ex.Message));
+            }
+        }
 
-        _service.Delete(id);
-
-        return StatusCode(200, new ApiResponse<string>
+        // PUT /api/v1/users/{id}
+        [HttpPut("{id}")]
+        public IActionResult Update(int id, [FromBody] UpdateUserDto dto)
         {
-            StatusCode = 200,
-            Success    = true,
-            Message    = $"User ID = {id} deleted successfully",
-            Data       = null
-        });
-    }
-    catch (Exception ex)
-    {
-        return StatusCode(500, ApiResponse<string>.ServerError(ex.Message));
-    }
-}
+            try
+            {
+                if (id <= 0)
+                    return StatusCode(400, ApiResponse<string>.BadRequest("ID must be greater than 0"));
+
+                var existing = _service.GetById(id);
+                if (existing == null)
+                    return StatusCode(404, ApiResponse<string>.NotFound($"User with ID = {id} not found"));
+
+                _service.Update(id, dto);
+                return StatusCode(200, ApiResponse<User>.Ok(_service.GetById(id)!, "User updated successfully"));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ApiResponse<string>.ServerError(ex.Message));
+            }
+        }
+
+        // DELETE /api/v1/users/{id}
+        [HttpDelete("{id}")]
+        public IActionResult Delete(int id)
+        {
+            try
+            {
+                if (id <= 0)
+                    return StatusCode(400, ApiResponse<string>.BadRequest("ID must be greater than 0"));
+
+                var existing = _service.GetById(id);
+                if (existing == null)
+                    return StatusCode(404, ApiResponse<string>.NotFound($"User with ID = {id} not found"));
+
+                _service.Delete(id);
+                return StatusCode(200, ApiResponse<string>.Ok($"User ID = {id} deleted successfully"));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ApiResponse<string>.ServerError(ex.Message));
+            }
+        }
     }
 }

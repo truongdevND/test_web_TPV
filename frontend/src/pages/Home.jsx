@@ -1,11 +1,9 @@
-import { Link } from "react-router-dom";
+import UserManagement from "../components/UserManagement";
 
 function Home() {
   return (
-    <div>
-      <h1>Home Page</h1>
-
-      <Link to="/test">Go to Test Page</Link>
+    <div className="min-h-screen bg-slate-50">
+      <UserManagement />
     </div>
   );
 }
