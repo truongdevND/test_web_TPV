@@ -9,12 +9,10 @@ const axiosClient = axios.create({
   timeout: 10000,
 });
 
-
 axiosClient.interceptors.response.use(
   (response) => response.data.data,
   (error) => {
     if (error.response) {
-
       if (error.response.status === 401) {
         console.log("Unauthorized");
       }

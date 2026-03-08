@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import userService from "../../services/userService";
-import { Button, ConfirmModal, Input } from "../ui";
+import { Button, ConfirmModal, Input, useToast } from "../ui";
 import UserTable from "./UserTable";
 import Pagination from "./Pagination";
 import UserFormModal from "./UserFormModal";
@@ -29,6 +29,7 @@ const SORT_BY_OPTIONS = [
 ];
 
 function UserManagement() {
+  const toast = useToast();
   const [users, setUsers] = useState([]);
   const [pagination, setPagination] = useState({
     page: 1,
@@ -89,18 +90,22 @@ function UserManagement() {
         }));
       } catch (err) {
         setError("Không thể tải danh sách người dùng. Vui lòng thử lại.");
+        toast.error({
+          title: "Lỗi",
+          message: "Không thể tải danh sách người dùng. Vui lòng thử lại.",
+        });
         setUsers([]);
         console.error(err);
       } finally {
         setLoading(false);
       }
     },
-    [buildParams, pagination.page]
+    [buildParams, pagination.page, toast]
   );
 
   useEffect(() => {
     fetchUsers(1);
-  }, []);
+  }, [fetchUsers]);
 
   const handlePageChange = (newPage) => {
     fetchUsers(newPage);
@@ -169,15 +174,26 @@ function UserManagement() {
     try {
       if (modalMode === "create") {
         await userService.create(formData);
+        toast.success({
+          title: "Thành công",
+          message: "Tạo người dùng mới thành công.",
+        });
       } else {
         await userService.update(selectedUser.id, formData);
+        toast.success({
+          title: "Thành công",
+          message: "Cập nhật thông tin người dùng thành công.",
+        });
       }
       closeModal();
       await fetchUsers(pagination.page);
     } catch (err) {
       console.error(err);
       const msg = err.response?.data?.message || "Có lỗi xảy ra. Vui lòng thử lại.";
-      alert(msg);
+      toast.error({
+        title: "Lỗi",
+        message: msg,
+      });
     } finally {
       setSubmitLoading(false);
     }
@@ -193,13 +209,20 @@ function UserManagement() {
     setDeletingId(pendingDeleteUser.id);
     try {
       await userService.delete(pendingDeleteUser.id);
+      toast.success({
+        title: "Thành công",
+        message: "Xóa người dùng thành công.",
+      });
       setConfirmDeleteOpen(false);
       setPendingDeleteUser(null);
       await fetchUsers(pagination.page);
     } catch (err) {
       console.error(err);
       const msg = err.response?.data?.message || "Không thể xóa người dùng. Vui lòng thử lại.";
-      alert(msg);
+      toast.error({
+        title: "Lỗi",
+        message: msg,
+      });
     } finally {
       setDeletingId(null);
     }
