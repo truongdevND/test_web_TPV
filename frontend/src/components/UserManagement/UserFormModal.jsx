@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
-import { Modal, Input, DateInput, Button } from "../ui";
+import { useEffect, useMemo, useRef, useState } from "react";
+import * as yup from "yup";
+import { Modal, Input, DateInput, Button, ConfirmModal } from "../ui";
 
 const INITIAL_FORM = {
   code: "",
@@ -9,6 +10,20 @@ const INITIAL_FORM = {
   phone: "",
   address: "",
 };
+
+const createUserSchema = (isEdit) =>
+  yup.object({
+    code: yup.string().trim().required("Vui lòng nhập mã"),
+    fullName: yup.string().trim().required("Vui lòng nhập họ tên"),
+    dateOfBirth: yup.string(),
+    email: yup
+      .string()
+      .trim()
+      .required("Vui lòng nhập email")
+      .email("Email không hợp lệ"),
+    phone: yup.string().trim().required("Vui lòng nhập số điện thoại"),
+    address: yup.string(),
+  });
 
 function toInputDate(ddMMyyyy) {
   if (!ddMMyyyy) return "";
@@ -24,24 +39,29 @@ function toApiDate(yyyyMMdd) {
   return `${d.padStart(2, "0")}/${m.padStart(2, "0")}/${y}`;
 }
 
-function UserFormModal({ open, onClose, mode, initialData, onSubmit, loading }) {
+function UserFormModal({ open, onClose, mode, initialData, onSubmit, loading, onDirtyChange }) {
   const [form, setForm] = useState(INITIAL_FORM);
   const [errors, setErrors] = useState({});
+  const initialFormRef = useRef(INITIAL_FORM);
+  const [confirmCancelOpen, setConfirmCancelOpen] = useState(false);
 
   const isEdit = mode === "edit";
 
   useEffect(() => {
     if (open) {
-      if (initialData) {
-        setForm({
-          ...INITIAL_FORM,
-          ...initialData,
-          dateOfBirth: toInputDate(initialData.dateOfBirth) || initialData.dateOfBirth || "",
-        });
-      } else {
-        setForm({ ...INITIAL_FORM });
-      }
+      const nextForm = initialData
+        ? {
+            ...INITIAL_FORM,
+            ...initialData,
+            dateOfBirth:
+              toInputDate(initialData.dateOfBirth) || initialData.dateOfBirth || "",
+          }
+        : { ...INITIAL_FORM };
+
+      setForm(nextForm);
+      initialFormRef.current = nextForm;
       setErrors({});
+      setConfirmCancelOpen(false);
     }
   }, [open, mode, initialData]);
 
@@ -51,21 +71,42 @@ function UserFormModal({ open, onClose, mode, initialData, onSubmit, loading }) 
     if (errors[name]) setErrors((prev) => ({ ...prev, [name]: null }));
   };
 
-  const validate = () => {
-    const next = {};
-    if (!form.fullName?.trim()) next.fullName = "Vui lòng nhập họ tên";
-    if (!form.email?.trim()) next.email = "Vui lòng nhập email";
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) next.email = "Email không hợp lệ";
-    if (!form.phone?.trim()) next.phone = "Vui lòng nhập số điện thoại";
-    if (isEdit && !form.code?.trim()) next.code = "Vui lòng nhập mã";
-    if (!isEdit && form.code !== undefined && !form.code?.trim()) next.code = "Vui lòng nhập mã";
-    setErrors(next);
-    return Object.keys(next).length === 0;
+  const isDirty = useMemo(() => {
+    const initial = initialFormRef.current;
+    const keys = Object.keys(INITIAL_FORM);
+    return keys.some((k) => (form?.[k] ?? "") !== (initial?.[k] ?? ""));
+  }, [form]);
+
+  useEffect(() => {
+    onDirtyChange?.(open ? isDirty : false);
+  }, [isDirty, open, onDirtyChange]);
+
+  const requestClose = () => {
+    if (loading) return;
+    if (isDirty) {
+      setConfirmCancelOpen(true);
+      return;
+    }
+    onClose?.();
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!validate()) return;
+    const schema = createUserSchema(isEdit);
+    try {
+      await schema.validate(form, { abortEarly: false });
+      setErrors({});
+    } catch (err) {
+      if (yup.ValidationError.isError(err)) {
+        const next = {};
+        err.inner.forEach((e) => {
+          if (e.path) next[e.path] = e.message;
+        });
+        setErrors(next);
+        return;
+      }
+      throw err;
+    }
     const payload = {
       ...form,
       dateOfBirth: form.dateOfBirth ? toApiDate(form.dateOfBirth) : form.dateOfBirth,
@@ -78,7 +119,7 @@ function UserFormModal({ open, onClose, mode, initialData, onSubmit, loading }) 
   return (
     <Modal
       open={open}
-      onClose={onClose}
+      onClose={requestClose}
       title={isEdit ? "Cập nhật người dùng" : "Tạo mới người dùng"}
       description={
         isEdit ? "Chỉnh sửa thông tin người dùng" : "Điền thông tin người dùng mới"
@@ -138,19 +179,39 @@ function UserFormModal({ open, onClose, mode, initialData, onSubmit, loading }) 
         />
 
         <div className="flex gap-3 pt-2">
-          <Button type="button" variant="secondary" className="flex-1" onClick={onClose}>
+          <Button
+            type="button"
+            variant="secondary"
+            className="flex-1"
+            onClick={requestClose}
+            disabled={loading}
+          >
             Hủy
           </Button>
           <Button
             type="submit"
             variant="primary"
             className="flex-1"
-            disabled={loading}
+            disabled={loading || Object.keys(errors).some((k) => errors[k])}
           >
             {loading ? "Đang xử lý..." : isEdit ? "Cập nhật" : "Tạo mới"}
           </Button>
         </div>
       </form>
+
+      <ConfirmModal
+        open={confirmCancelOpen}
+        title="Xác nhận hủy"
+        description="Bạn có chắc muốn hủy? Các thay đổi chưa lưu sẽ bị mất."
+        confirmText="Hủy thay đổi"
+        cancelText="Tiếp tục sửa"
+        confirmVariant="danger"
+        onCancel={() => setConfirmCancelOpen(false)}
+        onConfirm={() => {
+          setConfirmCancelOpen(false);
+          onClose?.();
+        }}
+      />
     </Modal>
   );
 }

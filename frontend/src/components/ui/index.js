@@ -3,3 +3,5 @@ export { default as Input } from "./Input";
 export { default as DateInput } from "./DateInput";
 export { default as Modal } from "./Modal";
 export { default as Table } from "./Table";
+export { default as Skeleton } from "./Skeleton";
+export { default as ConfirmModal } from "./ConfirmModal";

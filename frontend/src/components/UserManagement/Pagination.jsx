@@ -11,8 +11,8 @@ const NextIcon = () => (
   </svg>
 );
 
-function Pagination({ page, totalPages, totalRecords, pageSize, onPageChange }) {
-  if (totalPages <= 1) return null;
+function Pagination({ page, totalPages, totalRecords, pageSize, onPageChange, disabled = false }) {
+  if (totalPages <= 1 && !disabled) return null;
 
   const startRecord = (page - 1) * pageSize + 1;
   const endRecord = Math.min(page * pageSize, totalRecords);
@@ -32,7 +32,7 @@ function Pagination({ page, totalPages, totalRecords, pageSize, onPageChange }) 
           variant="secondary"
           size="md"
           icon={<PrevIcon />}
-          disabled={page <= 1}
+          disabled={disabled || page <= 1}
           onClick={() => onPageChange(page - 1)}
         >
           Trước
@@ -46,7 +46,7 @@ function Pagination({ page, totalPages, totalRecords, pageSize, onPageChange }) 
           size="md"
           icon={<NextIcon />}
           iconPosition="end"
-          disabled={page >= totalPages}
+          disabled={disabled || page >= totalPages}
           onClick={() => onPageChange(page + 1)}
         >
           Sau

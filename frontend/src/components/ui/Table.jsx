@@ -1,3 +1,5 @@
+import Skeleton from "./Skeleton";
+
 function Table({ children, className = "" }) {
   return (
     <div className="overflow-x-auto">
@@ -60,11 +62,31 @@ function TableEmpty({ icon, title, description }) {
   );
 }
 
+function TableSkeletonCell() {
+  return (
+    <td className="px-5 py-4">
+      <Skeleton className="h-4 w-full max-w-[120px]" />
+    </td>
+  );
+}
+
+function TableSkeletonRow({ colCount = 7 }) {
+  return (
+    <tr className="border-b border-slate-100">
+      {Array.from({ length: colCount }).map((_, i) => (
+        <TableSkeletonCell key={i} />
+      ))}
+    </tr>
+  );
+}
+
 Table.Head = TableHead;
 Table.HeadCell = TableHeadCell;
 Table.Body = TableBody;
 Table.Row = TableRow;
 Table.Cell = TableCell;
 Table.Empty = TableEmpty;
+Table.SkeletonCell = TableSkeletonCell;
+Table.SkeletonRow = TableSkeletonRow;
 
 export default Table;

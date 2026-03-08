@@ -8,7 +8,23 @@ const EmptyIcon = () => (
   </svg>
 );
 
-function UserTable({ users, onEdit }) {
+const SKELETON_ROW_COUNT = 10;
+const COLUMN_COUNT = 7;
+
+function UserTable({ users, onEdit, onDelete, deletingId, loading = false }) {
+  if (loading) {
+    return (
+      <Table>
+        <UserTableHead />
+        <Table.Body>
+          {Array.from({ length: SKELETON_ROW_COUNT }).map((_, i) => (
+            <Table.SkeletonRow key={i} colCount={COLUMN_COUNT} />
+          ))}
+        </Table.Body>
+      </Table>
+    );
+  }
+
   if (!users?.length) {
     return (
       <Table.Empty
@@ -24,7 +40,13 @@ function UserTable({ users, onEdit }) {
       <UserTableHead />
       <Table.Body>
         {users.map((user) => (
-          <UserTableRow key={user.id} user={user} onEdit={onEdit} />
+          <UserTableRow
+            key={user.id}
+            user={user}
+            onEdit={onEdit}
+            onDelete={onDelete}
+            deletingId={deletingId}
+          />
         ))}
       </Table.Body>
     </Table>
