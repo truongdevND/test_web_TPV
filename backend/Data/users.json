@@ -1,14 +1,5 @@
 [
   {
-    "Id": 5,
-    "Code": "U006",
-    "FullName": "Nguy\u1EC5n V\u0103n An",
-    "DateOfBirth": "12/05/1999",
-    "Email": "an.nguyen@gmail.com",
-    "Phone": "0912345678",
-    "Address": "H\u00E0 N\u1ED9i"
-  },
-  {
     "Id": 6,
     "Code": "U007",
     "FullName": "Tr\u1EA7n Th\u1ECB Lan",
