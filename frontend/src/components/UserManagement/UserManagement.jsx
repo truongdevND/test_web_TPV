@@ -1,9 +1,11 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import userService from "../../services/userService";
 import { Button, ConfirmModal, Input, useToast } from "../ui";
 import UserTable from "./UserTable";
 import Pagination from "./Pagination";
 import UserFormModal from "./UserFormModal";
+
+const SEARCH_DEBOUNCE_MS = 400;
 
 const PlusIcon = () => (
   <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -60,8 +62,8 @@ function UserManagement() {
   const buildParams = useCallback(
     (page, overrides = {}) => {
       const params = {
-        Page: page ?? pagination.page,
-        PageSize: pagination.pageSize,
+        Page: page,
+        PageSize: overrides.pageSize ?? pagination.pageSize,
         SortBy: overrides.sortBy ?? filters.sortBy,
         SortDesc: overrides.sortDesc ?? filters.sortDesc,
       };
@@ -71,11 +73,11 @@ function UserManagement() {
       if (address?.trim()) params.Address = address.trim();
       return params;
     },
-    [pagination.page, pagination.pageSize, filters.search, filters.address, filters.sortBy, filters.sortDesc]
+    [pagination.pageSize, filters.search, filters.address, filters.sortBy, filters.sortDesc]
   );
 
   const fetchUsers = useCallback(
-    async (page = pagination.page, paramOverrides = {}) => {
+    async (page = 1, paramOverrides = {}) => {
       setLoading(true);
       setError(null);
       try {
@@ -100,12 +102,33 @@ function UserManagement() {
         setLoading(false);
       }
     },
-    [buildParams, pagination.page, toast]
+    [buildParams, toast]
   );
 
+  const initialMount = useRef(true);
   useEffect(() => {
-    fetchUsers(1);
+    if (initialMount.current) {
+      initialMount.current = false;
+      fetchUsers(1);
+    }
   }, [fetchUsers]);
+
+  const searchDebounceRef = useRef(null);
+  const searchDebounceStarted = useRef(false);
+  useEffect(() => {
+    if (!searchDebounceStarted.current) {
+      searchDebounceStarted.current = true;
+      return;
+    }
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    searchDebounceRef.current = setTimeout(() => {
+      searchDebounceRef.current = null;
+      fetchUsers(1);
+    }, SEARCH_DEBOUNCE_MS);
+    return () => {
+      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    };
+  }, [filters.search, filters.address, fetchUsers]);
 
   const handlePageChange = (newPage) => {
     fetchUsers(newPage);
@@ -115,7 +138,15 @@ function UserManagement() {
     setFilters((prev) => ({ ...prev, [name]: value }));
   };
 
+  const clearSearchDebounce = useCallback(() => {
+    if (searchDebounceRef.current) {
+      clearTimeout(searchDebounceRef.current);
+      searchDebounceRef.current = null;
+    }
+  }, []);
+
   const handleSearch = () => {
+    clearSearchDebounce();
     setPagination((prev) => ({ ...prev, page: 1 }));
     fetchUsers(1);
   };
@@ -130,6 +161,7 @@ function UserManagement() {
   };
 
   const handleClearFilters = () => {
+    clearSearchDebounce();
     const defaultFilters = {
       search: "",
       address: "",
